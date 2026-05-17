@@ -33,10 +33,10 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Margin="0,0,0,8" Text="Input HTML" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="0" Margin="0,0,0,8" Text="Input" FontWeight="SemiBold" />
                     <ui:TextBox Grid.Row="1"
                                 VerticalAlignment="Stretch"
-                                HorizontalAlignment="Stretch" 
+                                HorizontalAlignment="Stretch"
                                 MinHeight="260"
                                 x:Name="InputHtmlTextBox"
                                 AcceptsReturn="True"
@@ -82,32 +82,47 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="Printer:" />
-                <ComboBox x:Name="PrintersComboBox" MinWidth="240" />
+            <Grid Grid.Column="0" VerticalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                <Rectangle Width="1" Height="24" Margin="16,0" Fill="#E0E0E0" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center" Text="Printer:" />
+                <ComboBox Grid.Row="0" Grid.Column="1" MinWidth="240" MaxWidth="400" x:Name="PrintersComboBox"
+                          VerticalAlignment="Center" />
 
-                <StackPanel VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="Chars/Line:" />
-                        <ui:NumberBox x:Name="CharsPerLineBox"
-                                      MinWidth="70"
-                                      Value="42"
-                                      Minimum="20"
-                                      Maximum="100"
-                                      ClearButtonEnabled="False" />
-                    </StackPanel>
-                    <TextBlock Text="42 ≈ 80mm paper width"
-                               FontSize="10"
-                               Opacity="0.55"
-                               Margin="0,2,0,0" />
+                <Rectangle Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" Width="1" Height="24" Margin="16,0"
+                           Fill="#E0E0E0" VerticalAlignment="Center" />
+
+                <StackPanel Grid.Row="0" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Text="Chars/Line:" />
+                    <ui:NumberBox x:Name="CharsPerLineBox"
+                                  MinWidth="70"
+                                  Value="42"
+                                  Minimum="20"
+                                  Maximum="100"
+                                  ClearButtonEnabled="False"
+                                  VerticalAlignment="Center" />
                 </StackPanel>
-            </StackPanel>
+
+                <TextBlock Grid.Row="1" Grid.Column="3"
+                           Text="42 ≈ 80mm paper width"
+                           FontSize="12"
+                           Opacity="0.55"
+                           Margin="0,2,0,0" />
+            </Grid>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <ui:Button Margin="0,0,8,0" Content="Preview" Icon="{ui:SymbolIcon Eye24}" Click="PreviewButton_Click" />
-                <ui:Button x:Name="PrintButton" Content="Print" Appearance="Primary" Icon="{ui:SymbolIcon Print24}" Click="PrintButton_Click" />
+                <ui:Button x:Name="PrintButton" Content="Print" Appearance="Primary" Icon="{ui:SymbolIcon Print24}"
+                           Click="PrintButton_Click" />
             </StackPanel>
         </Grid>
     </Grid>
