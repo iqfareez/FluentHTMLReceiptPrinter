@@ -98,7 +98,6 @@ public partial class MainWindow
     {
         if (sender is GridSplitter splitter)
             splitter.Background = new SolidColorBrush(Color.FromRgb(0, 120, 215));
-
     }
 
     private void GridSplitter_MouseLeave(object sender, MouseEventArgs e)
