@@ -1,8 +1,10 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using Microsoft.Win32;
 using PrintHTML.Core.Helpers;
 using PrintHTML.Core.Services;
 
@@ -19,6 +21,7 @@ public partial class MainWindow
     {
         InitializeComponent();
         LoadPrinters();
+        BindKeyboardShortcuts();
     }
 
     /// <summary>
@@ -110,4 +113,78 @@ public partial class MainWindow
     {
         return new FlowDocument(new Paragraph(new Run(message)));
     }
+
+    #region Menu Event Handlers
+
+    private void BindKeyboardShortcuts()
+    {
+        // Bind Ctrl+S to Save Input
+        var saveCommand = new RoutedCommand();
+        saveCommand.InputGestures.Add(new KeyGesture(Key.S, ModifierKeys.Control));
+        CommandBindings.Add(new CommandBinding(saveCommand, SaveInput_Click));
+    }
+
+    private void SaveInput_Click(object sender, RoutedEventArgs e)
+    {
+        var inputContent = InputHtmlTextBox.Text;
+
+        if (string.IsNullOrWhiteSpace(inputContent))
+        {
+            MessageBox.Show("There is no content to save.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var saveFileDialog = new SaveFileDialog
+        {
+            Filter = "Text Files (*.txt)|*.txt|HTML Files (*.html)|*.html|All Files (*.*)|*.*",
+            DefaultExt = ".txt",
+            Title = "Save HTML Input"
+        };
+
+        File.WriteAllText(saveFileDialog.FileName, inputContent);
+        MessageBox.Show($"File saved successfully to:\n{saveFileDialog.FileName}", "Success",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void ClearInput_Click(object sender, RoutedEventArgs e)
+    {
+        InputHtmlTextBox.Clear();
+        OutputPreviewViewer.Document =
+            MakePlaceholderDocument("Preview will appear here after you enter HTML and click Preview.");
+    }
+
+    private void Exit_Click(object sender, RoutedEventArgs e)
+    {
+        Application.Current.Shutdown();
+    }
+
+    private void SelectAll_Click(object sender, RoutedEventArgs e)
+    {
+        InputHtmlTextBox.SelectAll();
+    }
+
+    private void Copy_Click(object sender, RoutedEventArgs e)
+    {
+        if (InputHtmlTextBox.SelectedText.Length > 0)
+            Clipboard.SetText(InputHtmlTextBox.SelectedText);
+    }
+
+    private void Paste_Click(object sender, RoutedEventArgs e)
+    {
+        if (Clipboard.ContainsText())
+            InputHtmlTextBox.Paste();
+    }
+
+    private void About_Click(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show(
+            "Fluent HTML Receipt Printer v1.0\n\n" +
+            "A fluent interface for printing HTML receipts to thermal printers.\n\n" +
+            "© 2026",
+            "About Fluent HTML Receipt Printer",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
+    #endregion
 }
