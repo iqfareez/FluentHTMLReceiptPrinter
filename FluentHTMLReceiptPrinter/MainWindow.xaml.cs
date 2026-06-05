@@ -53,9 +53,18 @@ public partial class MainWindow
         }
 
         var selectedPrinter = PrintersComboBox.SelectedItem as string ?? string.Empty;
-        var previewDocument = _printerService.GeneratePreview(htmlInput, selectedPrinter, CharsPerLine);
-
-        OutputPreviewViewer.Document = previewDocument;
+        try
+        {
+            var previewDocument = _printerService.GeneratePreview(htmlInput, selectedPrinter, CharsPerLine);
+            OutputPreviewViewer.Document = previewDocument;
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show($"An error occurred while generating the preview: {exception.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            OutputPreviewViewer.Document =
+                MakePlaceholderDocument("Failed to generate preview. Please check the HTML content and try again.");
+        }
     }
 
     private void PrintButton_Click(object sender, RoutedEventArgs e)
