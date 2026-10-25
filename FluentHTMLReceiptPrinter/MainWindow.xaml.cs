@@ -7,6 +7,7 @@ using System.Windows.Media;
 using Microsoft.Win32;
 using PrintHTML.Core.Helpers;
 using PrintHTML.Core.Services;
+using Ui = Wpf.Ui.Controls;
 
 namespace FluentHTMLReceiptPrinter;
 
@@ -43,7 +44,7 @@ public partial class MainWindow
     /// <summary>
     /// Generate the preview given the HTML input
     /// </summary>
-    private void PreviewButton_Click(object sender, RoutedEventArgs e)
+    private async void PreviewButton_Click(object sender, RoutedEventArgs e)
     {
         var htmlInput = InputHtmlTextBox.Text;
         if (string.IsNullOrWhiteSpace(htmlInput))
@@ -60,50 +61,89 @@ public partial class MainWindow
         }
         catch (Exception exception)
         {
-            MessageBox.Show($"An error occurred while generating the preview: {exception.Message}", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
             OutputPreviewViewer.Document =
                 MakePlaceholderDocument("Failed to generate preview. Please check the HTML content and try again.");
+            await ShowDialogAsync("Error",
+                $"An error occurred while generating the preview: {exception.Message}", Ui.SymbolRegular.ErrorCircle24);
         }
     }
 
-    private void PrintButton_Click(object sender, RoutedEventArgs e)
+    private async void PrintButton_Click(object sender, RoutedEventArgs e)
     {
         var content = InputHtmlTextBox.Text;
         var selectedPrinter = PrintersComboBox.SelectedItem as string;
 
         if (string.IsNullOrWhiteSpace(selectedPrinter))
         {
-            MessageBox.Show("Please select a printer.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            await ShowDialogAsync("Warning", "Please select a printer.", Ui.SymbolRegular.Warning24);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(content))
         {
-            MessageBox.Show("The content to be printed cannot be empty.", "Warning", MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            await ShowDialogAsync("Warning", "The content to be printed cannot be empty.", Ui.SymbolRegular.Warning24);
             return;
         }
 
         PrintButton.IsEnabled = false;
         Mouse.OverrideCursor = Cursors.Wait;
 
+        var dialogTitle = "Information";
+        var dialogMessage = "The printing process was completed successfully.";
+        var dialogIcon = Ui.SymbolRegular.CheckmarkCircle24;
+
         try
         {
             AsyncPrintTask.Exec(true, () => _printerService.DoPrint(content, selectedPrinter, CharsPerLine));
-            MessageBox.Show("The printing process was completed successfully.", "Information", MessageBoxButton.OK,
-                MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"An error occurred during printing: {ex.Message}", "Error", MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            dialogTitle = "Error";
+            dialogMessage = $"An error occurred during printing: {ex.Message}";
+            dialogIcon = Ui.SymbolRegular.ErrorCircle24;
         }
         finally
         {
             PrintButton.IsEnabled = true;
             Mouse.OverrideCursor = null;
         }
+
+        await ShowDialogAsync(dialogTitle, dialogMessage, dialogIcon);
+    }
+
+    private Task<Ui.ContentDialogResult> ShowDialogAsync(string title, string message, Ui.SymbolRegular icon)
+    {
+        var content = new StackPanel { Orientation = Orientation.Horizontal };
+        content.Children.Add(new Ui.SymbolIcon
+        {
+            Symbol = icon,
+            FontSize = 28,
+            Margin = new Thickness(0, 0, 16, 0),
+            VerticalAlignment = VerticalAlignment.Top
+        });
+        content.Children.Add(new ScrollViewer
+        {
+            MaxHeight = 260,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Content = new TextBlock
+            {
+                Text = message,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 360
+            }
+        });
+
+        var dialog = new Ui.ContentDialog(DialogHost)
+        {
+            Title = title,
+            Content = content,
+            CloseButtonText = "OK",
+            CloseButtonAppearance = Ui.ControlAppearance.Primary,
+            DefaultButton = Ui.ContentDialogButton.Close
+        };
+
+        return dialog.ShowAsync();
     }
 
     private void GridSplitter_MouseEnter(object sender, MouseEventArgs e)
@@ -123,8 +163,6 @@ public partial class MainWindow
         return new FlowDocument(new Paragraph(new Run(message)));
     }
 
-    #region Menu Event Handlers
-
     private void BindKeyboardShortcuts()
     {
         // Bind Ctrl+S to Save Input
@@ -133,13 +171,13 @@ public partial class MainWindow
         CommandBindings.Add(new CommandBinding(saveCommand, SaveInput_Click));
     }
 
-    private void SaveInput_Click(object sender, RoutedEventArgs e)
+    private async void SaveInput_Click(object sender, RoutedEventArgs e)
     {
         var inputContent = InputHtmlTextBox.Text;
 
         if (string.IsNullOrWhiteSpace(inputContent))
         {
-            MessageBox.Show("There is no content to save.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            await ShowDialogAsync("Warning", "There is no content to save.", Ui.SymbolRegular.Warning24);
             return;
         }
 
@@ -150,9 +188,22 @@ public partial class MainWindow
             Title = "Save HTML Input"
         };
 
-        File.WriteAllText(saveFileDialog.FileName, inputContent);
-        MessageBox.Show($"File saved successfully to:\n{saveFileDialog.FileName}", "Success",
-            MessageBoxButton.OK, MessageBoxImage.Information);
+        if (saveFileDialog.ShowDialog(this) != true)
+            return;
+
+        try
+        {
+            File.WriteAllText(saveFileDialog.FileName, inputContent);
+        }
+        catch (Exception exception)
+        {
+            await ShowDialogAsync("Error", $"An error occurred while saving the file: {exception.Message}",
+                Ui.SymbolRegular.ErrorCircle24);
+            return;
+        }
+
+        await ShowDialogAsync("Success", $"File saved successfully to:\n{saveFileDialog.FileName}",
+            Ui.SymbolRegular.CheckmarkCircle24);
     }
 
     private void ClearInput_Click(object sender, RoutedEventArgs e)
@@ -184,16 +235,13 @@ public partial class MainWindow
             InputHtmlTextBox.Paste();
     }
 
-    private void About_Click(object sender, RoutedEventArgs e)
+    private async void About_Click(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show(
+        await ShowDialogAsync(
+            "About Fluent HTML Receipt Printer",
             "Fluent HTML Receipt Printer v1.0\n\n" +
             "A fluent interface for printing HTML receipts to thermal printers.\n\n" +
             "© 2026",
-            "About Fluent HTML Receipt Printer",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+            Ui.SymbolRegular.Info24);
     }
-
-    #endregion
 }

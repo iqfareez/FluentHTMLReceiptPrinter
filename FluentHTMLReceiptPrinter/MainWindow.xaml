@@ -145,5 +145,7 @@
                            Click="PrintButton_Click" />
             </StackPanel>
         </Grid>
+
+        <ui:ContentDialogHost x:Name="DialogHost" Grid.RowSpan="4" />
     </Grid>
 </ui:FluentWindow>
